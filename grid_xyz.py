@@ -49,7 +49,7 @@ def grid_xyz(width,height,length,max_step):
     
     
     dx = dxdy_pitch(width,height)
-    while dx >= max_step:
+    while dx > max_step:
         dx = dx/10
         
     
