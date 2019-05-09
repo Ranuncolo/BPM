@@ -72,7 +72,16 @@ Add mesh points
 *****************************************************************************
 """
 
-dx = 10  #chosen, it will be given as an input
+dx = 10.2  #chosen, it will be given as an input
+
+try:
+    i = int(dx)
+    print("Ok, I can go on, the value is ",i)
+except ValueError as err:
+    print(err)
+    
+
+
 xx = np.linspace(0,width,round(width/dx+1))
 yy = np.linspace(0,height,round(height/dx)+1)
 zz = np.linspace(0,length,round(length/dx+1))
