@@ -8,16 +8,17 @@ Created on Tue May 14 15:31:05 2019
 import numpy as np
 from scipy.sparse import dia_matrix
 import time
+
 """
 This function will make a (nodes x 9) matrix which is then used to make a
 sparsed banded matrix. The structure is as follows:
     
     i-1,j+1      i,j+1    1+1,j+1
-      (0)        (1)        (2)
+     (0-α)      (1-β)      (2-γ)
     i-1,j        i,j      1+1,j  
-      (3)        (4)        (5) 
+     (3-δ)      (4-ε)      (5-ψ) 
     i-1,j-1      i,j-1    1+1,j-1
-      (6)        (7)        (8)  
+     (6-φ)      (7-χ)      (8-ζ)  
       
 where the number between () is the vector position of each component.
 
@@ -87,7 +88,7 @@ Look at this picture to better understand how diag works:
     
     This is everything but elegant, and I hate it. 
 """    
-    
+
 t1 = time.time()
 a1 = np.roll(C[:,0],-2*s-2)
 a2 = np.roll(C[:,1],-2*s-1)
@@ -110,7 +111,7 @@ D = dia_matrix((data,diag),(s*2+1,2*s+1)).toarray()
 print(D)
 print(time.time()-t1)
 
-## WAY TO, instead of roll I am going to delete some elements so that
+## WAY TwO, instead of roll I am going to delete some elements so that
 # the numeber of elements in each diagonal is the right one, always.
 t2 = time.time()
 
