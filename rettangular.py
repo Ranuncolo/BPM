@@ -4,7 +4,7 @@ Created on Wed May  1 15:15:33 2019
 
 @author: 2353588g
 
-This function is used to draw a first graf of the waveguide and the mesh points
+This function is used to draw a first graph of the waveguide and the mesh points
 inside it. It's quite simple for now, just to have a look at the configuration
 It will be later on enhanced, giving it room for the coating and so on.
 
@@ -79,7 +79,7 @@ Add mesh points
 *****************************************************************************
 """
 
-dx = 10.2  #chosen, it will be given as an input
+dx = 13  #chosen, it will be given as an input
 
 try:
     i = int(dx)

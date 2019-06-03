@@ -13,7 +13,6 @@ class build_matrix:
         """ For now it is, but it's wrong because I would like to have the grid"""
         self.s = s
         self.C = C #matrix, nodex9
-        
     def diagonal_position(self):
         C = self.C
         s  = self.s

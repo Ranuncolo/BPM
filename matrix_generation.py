@@ -30,12 +30,14 @@ where the number between () is the vector position of each component.
 """
 
 #%% Required initial values:
-s = 20
+s = 2
 w = np.linspace(-s,s,2*s+1)
 xs,ys = np.meshgrid(w,w)
 grid = (xs,np.flipud(ys)) 
 
-e = np.array([1,2,3,4,5,6,7,8,9])
+
+e = np.array([10,5,5,5,10,5,5,5,15])
+e = np.array([10,5,0,5,10,0,0,0,15])
 tensor = {(i,j):e for i,j in zip(grid[0].flat,grid[1].flat)}
 
 
@@ -288,8 +290,46 @@ P = vstack([PXXPXY,PYXPYY])
 #l = counter(l,P)
 
     
-#%%
+#%% I WANT TO print this P just to see how it looks like
+# THIS IS OK for s = 5, so max 242 elements.
+import matplotlib.pyplot as plt
+
+U = P.toarray()
+
+with np.nditer(U,op_flags=['readwrite']) as it:
+    for x in it:
+        if x[...] != 0:
+            x[...] = 1
+
+#plt.pcolor(U)
+
+# get dimensions of U
+a,b = U.shape
+
+w = np.linspace(-a/2,a,a+1)
+xr,yr = np.meshgrid(w,w)
+fig = plt.figure(figsize=(10,10))
+plt.pcolor(xr,np.flipud(yr),U,cmap = 'Purples') 
 
     
-    
+#%% Solve P with eigenvalues
+# Get larger 2 eigenvalues/vectors
 
+from scipy.sparse.linalg import eigs
+evals, evecs = eigs(P,2,which='LM')
+
+# supposing a dz = 2 (step)
+# Solution for y(z) with z = dz = 2 and considering yo as previous calculated
+# field while y'(0) = 0 for now. 
+
+dz = 2
+yo = np.ones([50,1])
+ß = 50
+
+rad = np.sqrt(ß**2+evals[0]**2)
+
+y2 = yo/2*(1-ß/rad)*np.exp(1j*(ß+rad)*dz) \
+        + yo/2*(1+ß/rad)*np.exp(1j*(ß-rad)*dz)
+
+
+# return y2

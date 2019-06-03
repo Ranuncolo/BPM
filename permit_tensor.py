@@ -27,18 +27,15 @@ TESTING PART
 import numpy as np
 import matplotlib.pyplot as plt
 
+"""
 # Specify waveguide dimensions, coating and their tensors 
 width = 100
 height = 82
 
-e_w = np.array([[3, 1, 0],
-                [1, 3, 0],
-                [0, 0, 2]])   
+e_w = np.array([3, 1, 0, 1, 3, 0, 0, 0, 2])   
 #coating thickness
 t = 15
-e_c = np.array([[3.5, 0.5, 0],
-                [0.5, 3, 0],
-                [0, 0, 2.7]])
+e_c = np.array([3.5, 0.5, 0, 0.5, 3, 0, 0, 0, 2.7])
     
 # define their occupied 'space'    
 wave_space = ((-width/2,width/2),(-height/2,height/2))
@@ -60,9 +57,9 @@ grid = (xx,yy)
 # Preallocate tensor
 # It is a tensor whose keys are combination of (x,y) and None as values.
 tensor  = {(i,j):None for i,j in zip(grid[0].flat,grid[1].flat)}
-
+"""
 ##############################################################################
-def permit_tensor(permittivity_tensor,wave,e_w,coat,e_c,k):
+def permit_tensor(permittivity_tensor,wave,e_w,coat=((0,0),(0,0)),e_c=np.ones(9),k=1):
     
     """ 
     This function will return the permittivity tensor at the k-step, which
@@ -122,9 +119,9 @@ def permit_tensor(permittivity_tensor,wave,e_w,coat,e_c,k):
                 permittivity_tensor[key] = e_c
         #otherwise it's the identity tensor
             else:
-                permittivity_tensor[key] = np.ones((3,3))
+                permittivity_tensor[key] = np.ones(9)
         else:
-            permittivity_tensor[key] = np.ones((3,3))
+            permittivity_tensor[key] = np.ones(9)
             
     return permittivity_tensor
             
@@ -194,7 +191,7 @@ def draw_profile(grid,wave,coat):
 
 """
 Let's try them:
-""" 
+
 tensor_k = permit_tensor(tensor,wave_space,e_w,coat_space,e_c,1)
 
 #call the second function and then plot it
@@ -204,7 +201,7 @@ plt.pcolor(xx,yy,k.reshape(len(xx),len(xx)))
 
 
 
-
+"""
 
 """
 Problem of k in the first function

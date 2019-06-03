@@ -38,6 +38,11 @@ def finite_diff(tensor, grid, dx, dy):
     dicx = {(i,j):None for i,j in zip(grid[0].flat,grid[1].flat)}
     dicy = {(i,j):None for i,j in zip(grid[0].flat,grid[1].flat)}
     
+#    print(dic2x.keys(), end = ' ')
+#    print(dic2x.values(), end = ' ')
+#    print('-----------------------')
+#    print(tensor.keys(), end = ' ')
+#    print(tensor.values(), end = ' ')
     # actual computation of finite differences:
     
     #permittivity tensor of the air, for now I assume it's one since there is 
