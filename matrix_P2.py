@@ -11,7 +11,6 @@ import numpy as np
 from scipy.sparse import vstack, hstack
 import finite_diff
 import build_matrix
-
 """
 This function will make a (nodes x 9) matrix which is then used to make a
 sparsed banded matrix. The structure is as follows:
@@ -54,8 +53,6 @@ exx, exy, exz, eyx, eyy, eyz, ezx, ezy, ezz = (0,1,2,3,4,5,6,7,8)
 dx = 1
 dy = 1
 """
-
-print('ok')
 #%%
 
 
@@ -72,7 +69,7 @@ def P(tensor,grid,dx,dy):
     Pyx = np.zeros((len(node_n),9))
     Pyy = np.zeros((len(node_n),9))
 
-    #%%
+    #%% SORVOLIAMO QUI EPR ORA
     per_dx2, per_dy2, per_dxy, per_dx, per_dy = finite_diff.finite_diff(tensor,grid,dx,dy)
 
     """ make the 9 diagonals for the 4 matrices """
@@ -89,7 +86,25 @@ def P(tensor,grid,dx,dy):
     cost = omega ** 2 * mu_o * epsilon_o
     ß = 1
 
+    #%% definition of function check
+    def check(val,tensor):
+        cont = 0
+        lista = []
+        for i in (-0.1,0,0.1):
+            for j in (-0.1,0,0.1):
+                lista.append((round(val[0]+i,1),round(val[1]+j,1)))        
+        #print(lista)
+        for a in lista:
+            if a in tensor:
+                cont += 1
+        #print(cont)
+        return cont
+    
+    #%% make matrix P
+    conteggio_elementi = 0
+    
     #%% Make Pxx
+    
     for l,c in enumerate(node_n):
         E_o     = cost*tensor[c][exx]+ 1/tensor[c][ezz]*(per_dx2[c][exx] \
                     + per_dxy[c][eyx])-ß**2
@@ -106,28 +121,27 @@ def P(tensor,grid,dx,dy):
         chi     = 1/dy**2
         zeta    = -(tensor[c][eyx]/tensor[c][ezz])/(4*dx*dy) 
         
-        Pxx[l,0] = alpha    if (c[0]-dx,c[1]+dy)  in tensor else Pxx[l,0]
-        Pxx[l,1] = beta     if (c[0],c[1]+dy)    in tensor else Pxx[l,1]
-        Pxx[l,2] = gamma    if (c[0]+dx,c[1]+dy)  in tensor else Pxx[l,2]
-        Pxx[l,3] = delta    if (c[0]-dx,c[1])    in tensor else Pxx[l,3]
+        #print(l,c)
+        Pxx[l,0] = alpha    if check((c[0]-dx,c[1]+dy),node_n) > 0  else Pxx[l,0]
+        #print(np.round(c[0]-dx,1),np.round(c[1]+dy,1),Pxx[l,0])
+        Pxx[l,1] = beta     if check((c[0],c[1]+dy),node_n) > 0     else Pxx[l,1]
+        Pxx[l,2] = gamma    if check((c[0]+dx,c[1]+dy),node_n) > 0  else Pxx[l,2]
+        Pxx[l,3] = delta    if check((c[0]-dx,c[1]),node_n) > 0     else Pxx[l,3]
         Pxx[l,4] = epsi
-        Pxx[l,5] = psi      if (c[0]+dx,c[1])    in tensor else Pxx[l,5]
-        Pxx[l,6] = phi      if (c[0]-dx,c[1]-dy)  in tensor else Pxx[l,6]
-        Pxx[l,7] = chi      if (c[0],c[1]-dy)    in tensor else Pxx[l,7]
-        Pxx[l,8] = zeta     if (c[0]+dx,c[1]-dy)  in tensor else Pxx[l,8]
+        Pxx[l,5] = psi      if check((c[0]+dx,c[1]),node_n) > 0     else Pxx[l,5]
+        Pxx[l,6] = phi      if check((c[0]-dx,c[1]-dy),node_n) > 0  else Pxx[l,6]
+        Pxx[l,7] = chi      if check((c[0],c[1]-dy),node_n) > 0     else Pxx[l,7]
+        Pxx[l,8] = zeta     if check((c[0]+dx,c[1]-dy),node_n) > 0  else Pxx[l,8]
         #print(alpha,beta,gamma,delta,epsi,psi,phi,chi,zeta)
-
-    k = 0
-    for _ in np.nditer(Pxx):
-        if _ != 0:
-            k += 1
-    print('for Pxx there are {} elements:'.format(k)) 
-    print('PXX ok')
+    h = 0
+    for el in np.nditer(Pxx):
+        if el != 0:
+            h += 1
+    conteggio_elementi += h    
+    print('number of elements in Pxx is {}'.format(h))   
+    print('Pxx ok')
+    
     #%% Make Pxy 
-    dx = np.round(dx,1)
-    dy = np.round(dy,1)
-
-    print(dx,dy)
     for l,c in enumerate(node_n):
         E_o     = cost*tensor[c][exy]+ 1/tensor[c][ezz]*(per_dx2[c][exy] \
                     + per_dxy[c][eyy])
@@ -143,32 +157,24 @@ def P(tensor,grid,dx,dy):
         phi     = - (1-tensor[c][eyy]/tensor[c][ezz])/(4*dx*dy)
         chi     = 0
         zeta    = (1-tensor[c][eyy]/tensor[c][ezz])/(4*dx*dy) 
-        print(l,c)
-        Pxy[l,0] = alpha    if (np.round(c[0]-dx,1),np.round(c[1]+dy,1))  in tensor else Pxy[l,0]
-        print(c[0]-dx,c[1]+dy,Pxy[l,0])
-        #still wrong
-#        Pxy[l,1] = beta     if (c[0],np.round(c[1]+dy,1))    in tensor else Pxy[l,1]
-#        Pxy[l,2] = gamma    if (np.round(c[0]+dx,1),np.round(c[1]+dy,1))  in tensor else Pxy[l,2]
-#        Pxy[l,3] = delta    if (np.round(c[0]-dx,1),c[1])    in tensor else Pxy[l,3]
-#        Pxy[l,4] = epsi
-#        Pxy[l,5] = psi      if (np.round(c[0]+dx,1),c[1])    in tensor else Pxy[l,5]
-#        Pxy[l,6] = phi      if (np.round(c[0]-dx,1),np.round(c[1]-dy,1))  in tensor else Pxy[l,6]
-#        Pxy[l,7] = chi      if (c[0],np.round(c[1]-dy,1))    in tensor else Pxy[l,7]
-#        Pxy[l,8] = zeta     if (np.round(c[0]+dx,1),np.round(c[1]-dy,1))  in tensor else Pxy[l,8]   
-        Pxy[l,1] = beta     if (c[0],c[1]+dy)    in tensor else Pxy[l,1]
-        Pxy[l,2] = gamma    if (c[0]+dx,c[1]+dy)  in tensor else Pxy[l,2]
-        Pxy[l,3] = delta    if (c[0]-dx,c[1])    in tensor else Pxy[l,3]
+        
+        Pxy[l,0] = alpha    if check((c[0]-dx,c[1]+dy),node_n) > 0  else Pxy[l,0]
+        Pxy[l,1] = beta     if check((c[0],c[1]+dy),node_n) > 0     else Pxy[l,1]
+        Pxy[l,2] = gamma    if check((c[0]+dx,c[1]+dy),node_n) > 0  else Pxy[l,2]
+        Pxy[l,3] = delta    if check((c[0]-dx,c[1]),node_n) > 0     else Pxy[l,3]
         Pxy[l,4] = epsi
-        Pxy[l,5] = psi      if (c[0]+dx,c[1])    in tensor else Pxy[l,5]
-        Pxy[l,6] = phi      if (c[0]-dx,c[1]-dy)  in tensor else Pxy[l,6]
-        Pxy[l,7] = chi      if (c[0],c[1]-dy)    in tensor else Pxy[l,7]
-        Pxy[l,8] = zeta     if (c[0]+dx,c[1]-dy)  in tensor else Pxy[l,8]   
-    k = 0
-    for _ in np.nditer(Pxy):
-        if _ != 0:
-            k += 1
-    print('for Pxy there are {} elements:'.format(k)) 
-    print('PXY ok')
+        Pxy[l,5] = psi      if check((c[0]+dx,c[1]),node_n) > 0     else Pxy[l,5]
+        Pxy[l,6] = phi      if check((c[0]-dx,c[1]-dy),node_n) > 0  else Pxy[l,6]
+        Pxy[l,7] = chi      if check((c[0],c[1]-dy),node_n) > 0     else Pxy[l,7]
+        Pxy[l,8] = zeta     if check((c[0]+dx,c[1]-dy),node_n) > 0  else Pxy[l,8]
+    
+    h = 0
+    for el in np.nditer(Pxy):
+        if el != 0:
+            h += 1
+    conteggio_elementi += h
+    print('number of elements in Pxy is {}'.format(h))  
+    print('Pxy ok')    
     #%% Make Pyx 
     for l,c in enumerate(node_n):
         E_o     = cost*tensor[c][eyx]+ 1/tensor[c][ezz]*(per_dxy[c][exx] \
@@ -186,21 +192,22 @@ def P(tensor,grid,dx,dy):
         chi     = tensor[c][eyx]/tensor[c][ezz]/dy**2
         zeta    = (1-tensor[c][exx]/tensor[c][ezz])/(4*dx*dy) 
         
-        Pyx[l,0] = alpha    if (np.round(c[0]-dx,1),np.round(c[1]+dy,1))  in tensor else Pyx[l,0]
-        Pyx[l,1] = beta     if (c[0],np.round(c[1]+dy,1))    in tensor else Pyx[l,1]
-        Pyx[l,2] = gamma    if (np.round(c[0]+dx,1),np.round(c[1]+dy,1))  in tensor else Pyx[l,2]
-        Pyx[l,3] = delta    if (np.round(c[0]-dx,1),c[1])    in tensor else Pyx[l,3]
+        Pyx[l,0] = alpha    if check((c[0]-dx,c[1]+dy),node_n) > 0  else Pyx[l,0]
+        Pyx[l,1] = beta     if check((c[0],c[1]+dy),node_n) > 0     else Pyx[l,1]
+        Pyx[l,2] = gamma    if check((c[0]+dx,c[1]+dy),node_n) > 0  else Pyx[l,2]
+        Pyx[l,3] = delta    if check((c[0]-dx,c[1]),node_n) > 0     else Pyx[l,3]
         Pyx[l,4] = epsi
-        Pyx[l,5] = psi      if (np.round(c[0]+dx,1),c[1])    in tensor else Pyx[l,5]
-        Pyx[l,6] = phi      if (np.round(c[0]-dx,1),np.round(c[1]-dy,1))  in tensor else Pyx[l,6]
-        Pyx[l,7] = chi      if (c[0],np.round(c[1]-dy,1))    in tensor else Pyx[l,7]
-        Pyx[l,8] = zeta     if (np.round(c[0]+dx,1),np.round(c[1]-dy,1))  in tensor else Pyx[l,8]
-    k = 0
-    for _ in np.nditer(Pyx):
-        if _ != 0:
-            k += 1
-    print('for Pyx there are {} elements:'.format(k)) 
-    print('PYX ok')
+        Pyx[l,5] = psi      if check((c[0]+dx,c[1]),node_n) > 0     else Pyx[l,5]
+        Pyx[l,6] = phi      if check((c[0]-dx,c[1]-dy),node_n) > 0  else Pyx[l,6]
+        Pyx[l,7] = chi      if check((c[0],c[1]-dy),node_n) > 0     else Pyx[l,7]
+        Pyx[l,8] = zeta     if check((c[0]+dx,c[1]-dy),node_n) > 0  else Pyx[l,8]    
+    h = 0
+    for el in np.nditer(Pyx):
+        if el != 0:
+            h += 1
+    conteggio_elementi += h
+    print('number of elements in Pxy is {}'.format(h))  
+    print('Pyx ok')
     #%% Make Pyy 
     for l,c in enumerate(node_n):
         E_o     = cost*tensor[c][eyy]+ 1/tensor[c][ezz]*(per_dxy[c][exy] \
@@ -218,21 +225,23 @@ def P(tensor,grid,dx,dy):
         chi     = tensor[c][eyy]/tensor[c][ezz]/dy**2
         zeta    = - (tensor[c][exy]/tensor[c][ezz])/(4*dx*dy)
         
-        Pyy[l,0] = alpha    if (np.round(c[0]-dx,1),np.round(c[1]+dy,1))  in tensor else Pyy[l,0]
-        Pyy[l,1] = beta     if (c[0],np.round(c[1]+dy,1))    in tensor else Pyy[l,1]
-        Pyy[l,2] = gamma    if (np.round(c[0]+dx,1),np.round(c[1]+dy,1))  in tensor else Pyy[l,2]
-        Pyy[l,3] = delta    if (np.round(c[0]-dx,1),c[1])    in tensor else Pyy[l,3]
+        Pyy[l,0] = alpha    if check((c[0]-dx,c[1]+dy),node_n)  else Pyy[l,0]
+        Pyy[l,1] = beta     if check((c[0],c[1]+dy),node_n)     else Pyy[l,1]
+        Pyy[l,2] = gamma    if check((c[0]+dx,c[1]+dy),node_n)  else Pyy[l,2]
+        Pyy[l,3] = delta    if check((c[0]-dx,c[1]),node_n)     else Pyy[l,3]
         Pyy[l,4] = epsi
-        Pyy[l,5] = psi      if (np.round(c[0]+dx,1),c[1])    in tensor else Pyy[l,5]
-        Pyy[l,6] = phi      if (np.round(c[0]-dx,1),np.round(c[1]-dy,1))  in tensor else Pyy[l,6]
-        Pyy[l,7] = chi      if (c[0],np.round(c[1]-dy,1))    in tensor else Pyy[l,7]
-        Pyy[l,8] = zeta     if (np.round(c[0]+dx,1),np.round(c[1]-dy,1))  in tensor else Pyy[l,8]
-    k = 0
-    for _ in np.nditer(Pyy):
-        if _ != 0:
-            k += 1
-    print('for Pyy there are {} elements:'.format(k))     
-    print('PYY ok')
+        Pyy[l,5] = psi      if check((c[0]+dx,c[1]),node_n)     else Pyy[l,5]
+        Pyy[l,6] = phi      if check((c[0]-dx,c[1]-dy),node_n)  else Pyy[l,6]
+        Pyy[l,7] = chi      if check((c[0],c[1]-dy),node_n)     else Pyy[l,7]
+        Pyy[l,8] = zeta     if check((c[0]+dx,c[1]-dy),node_n)  else Pyy[l,8]
+    
+    h = 0
+    for el in np.nditer(Pyy):
+        if el != 0:
+            h += 1
+    conteggio_elementi += h
+    print('number of elements in Pyy is {}'.format(h))  
+    print('Pyy ok')
     #%% make block matrix
     #
     #Tbh I don't know if it is easier to build the matrix first and then sparse it
@@ -275,6 +284,7 @@ def P(tensor,grid,dx,dy):
     
     PXXPXY = hstack([PXX,PXY])
     PYXPYY = hstack([PYX,PYY])
+    
     print('h-stak ok')
     """
     done for s = 1, which means -1/0/+1
@@ -337,9 +347,9 @@ def P(tensor,grid,dx,dy):
     #
     #l = 0
     P = vstack([PXXPXY,PYXPYY])
-    #l = counter(l,P)
-
-    return P
+    print('Matrix P - built')
+    #print('Number of elements: {}'.format(conteggio_elementi))
+    return P, conteggio_elementi
 #%% I WANT TO print this P just to see how it looks like
 # THIS IS OK for s = 5, so max 242 elements.
 

@@ -14,15 +14,21 @@ import numpy as np
 #import whatever as what
 
 
+tx = 'This method works but its super slow because of the list comparison hidden \
+inside matrix_P 2, which unfortunately is required or I will loose points in \
+the grid. This is due to the rounding problem when dividing the dimentions \
+in tot pieces.'
+print(tx)
+
 # wavelength [m]
 λ = 1.55e-6
 
-#size of computation window and waveguide 
+#size of computation window and waveguide
 
-x, y, z = .5e-6, .5e-6, 10e-6
-xw, yw = 0.4e-6, .2e-6
+x, y, z = 0.4e-6, 0.4e-6, 10e-6
+xw, yw = 0.3e-6, .2e-6
 
-""" X and Y look reverted lol """
+"""funny, but xw and yw are reversed"""
 
 print('Wavelength: ✓\nComputation window: ✓\nWavelength dimensions: ✓')
 
@@ -60,19 +66,10 @@ is way more reasonable lol
 # instead of considering the dx step, it is actually chosen the numeber of points
 # I want. This is because arange is not good for NON integer values. However,
 # in this way I also return the step dx,dy
-xl, dx = np.linspace(0,x,7, retstep = True)
-yl, dy = np.linspace(0,y,7, retstep = True)
+xl, dx = np.linspace(0,x,51, retstep = True)
+yl, dy = np.linspace(0,y,51, retstep = True)
 
 
-# try to round and save points
-#xl = np.arange(0,5e-7,np.around(dx,10))
-#xl = np.around(xl,9)
-#yl = np.arange(0,5e-7,np.around(dy,10))
-#yl = np.around(yl,9)
-
-
-print(dx)
-print(dy)
 
 #% Plot the initial configuration,
 print('Initial permittivity tensor: ✓')
@@ -96,16 +93,40 @@ pylab.contourf(Ex_o, 50) #Here 50 is for number of lines, the more the circa bet
 #try a meshgrid
 
 x_r,y_r = Ex_o.shape
+""" can't remember why this was improtant """
+
 x_r = np.linspace(0,x_r,x_r+1)
 y_r = np.linspace(0,y_r,y_r+1)
 
+"""changin it now """
+
+#%%
+xl2 = xl * 10**9; yl2 = yl*10**9
+dx2 = dx * 10**9; dy2 = dy*10**9
+xl2 = np.round(xl2,1)
+yl2 = np.round(yl2,1)
+
+dx2 = np.round(dx2,1)
+dy2 = np.round(dy2,1)
+
 #xx,yy = np.meshgrid(x_r,y_r)
-xx,yy = np.meshgrid(xl-max(xl)/2,yl-max(yl)/2)
-xx = xx*10**9; yy = yy*10**9
+xx,yy = np.meshgrid(xl2-max(xl2)/2,yl2-max(yl2)/2)
+
+#%%
+#xx = xx*10**9; yy = yy*10**9
 #pylab.contourf(xx,yy,Ex_o,50) plot it to see if it's the same, it should lol
 yy = np.flipud(yy)
 
-xx = np.around(xx,1); yy = np.around(yy,1)
+xx = xx.astype('float')
+yy = yy.astype('float')
+
+xx = np.round(xx,1)
+yy = np.round(yy,1)
+
+""" this is necessary because of the problem with float and float64 where some
+values are not representable and I would lose some elements """
+
+#xx = np.around(xx,1); yy = np.around(yy,1)
 # And now convert in dictionary:
 key = zip(xx.flat,yy.flat)
 key = tuple(key)
@@ -145,7 +166,7 @@ grid = (xx,yy)
 #grid = np.around(grid,1) # just one decimal is more than enough, I am in nanometers
 #%% 
 #initialisation of the dictionary - permittivity
-per_tensor  = {(i,j):None for i,j in zip(grid[0].flat,grid[1].flat)}
+per_tensor  = {(i,j):None for i,j in zip(xx.flat,yy.flat)}
 
 #%%
 e_w = np.asarray(e_w)
@@ -175,15 +196,16 @@ cost = omega ** 2 * mu_o * epsilon_o
 
 #%% Call the function
 ################################
-dx = dx*10**9
-dy = dy*10**9
+#x = dx*10**9
+#dy = dy*10**9
 
-
-import matrix_P
-P = matrix_P.P(per_tensor,grid,dx,dy)
+import matrix_P2
+P, num_elements = matrix_P2.P(per_tensor,grid,dx2,dy2)
 print('P - sparse matrix: ✓')
-print('{} sparse matrix with {} stored elements.'.format(P.shape, P.nnz))
-
+if P.nnz == num_elements:
+    print('{} sparse matrix with {} stored elements.'.format(P.shape, P.nnz))
+else:
+    print('ERROR')
 #%% Search for eigenvalues
 
 from scipy.sparse.linalg import eigen
@@ -198,3 +220,4 @@ that sure. I should try anyway with real numbers to see what I get.
 Unfortunately I am not 100% sure what is going to get out.
 """
 
+print('lovely, but it takes too much time')
